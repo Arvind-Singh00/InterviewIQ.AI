@@ -89,8 +89,6 @@ VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
 npm run dev
 ```
 
-Open **http://localhost:5173** 🎉
-
 ---
 
 ## 🌐 Deployment (Render)
@@ -146,13 +144,7 @@ InterviewIQ.AI/
 | `GET` | `/api/interview/history` | Get interview history |
 | `POST` | `/api/payment/create-order` | Create Razorpay order |
 
----
 
-## 📸 Screenshots
-
-> Coming soon
-
----
 
 ## 📄 License
 
