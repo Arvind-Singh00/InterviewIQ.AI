@@ -6,12 +6,18 @@ const isAuth = async (req,res,next) => {
         let {token} = req.cookies
 
         if(!token){
-            return res.status(400).json({message:"user does not have a token"})
+            return res.status(401).json({
+                error: "AUTH_TOKEN_MISSING",
+                message: "Please sign in to continue."
+            })
         }
         const verifyToken = jwt.verify(token , process.env.JWT_SECRET)
         
         if(!verifyToken){
-            return res.status(400).json({message:"user does not have a valid token"})
+            return res.status(401).json({
+                error: "AUTH_TOKEN_INVALID",
+                message: "Please sign in again."
+            })
         }
         req.userId = verifyToken.userId
 
@@ -19,7 +25,14 @@ const isAuth = async (req,res,next) => {
    
 
     } catch (error) {
-        return res.status(500).json({message:`isAuth error ${error}`})
+        console.warn("[auth-error]", {
+            path: req.originalUrl,
+            message: error.message
+        });
+        return res.status(401).json({
+            error: "AUTH_TOKEN_INVALID",
+            message: "Please sign in again."
+        })
     }
     
 }

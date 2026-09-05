@@ -86,12 +86,38 @@ export const generateQuestion = async (req, res) => {
   try {
     let { role, experience, mode, resumeText, projects, skills } = req.body
 
-    role = role?.trim();
-    experience = experience?.trim();
-    mode = mode?.trim();
+    role = typeof role === "string" ? role.trim() : "";
+    experience = typeof experience === "string" ? experience.trim() : "";
+    mode = typeof mode === "string" ? mode.trim() : "";
 
-    if (!role || !experience || !mode) {
-      return res.status(400).json({ message: "Role, Experience and Mode are required." })
+    const fieldErrors = {};
+
+    if (!role) {
+      fieldErrors.role = "Role is required.";
+    }
+
+    if (!experience) {
+      fieldErrors.experience = "Experience is required.";
+    }
+
+    if (!mode) {
+      fieldErrors.mode = "Interview mode is required.";
+    }
+
+    if (projects !== undefined && !Array.isArray(projects)) {
+      fieldErrors.projects = "Projects must be an array.";
+    }
+
+    if (skills !== undefined && !Array.isArray(skills)) {
+      fieldErrors.skills = "Skills must be an array.";
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      return res.status(400).json({
+        error: "VALIDATION_ERROR",
+        message: "Invalid interview setup.",
+        fields: fieldErrors
+      })
     }
 
     const user = await User.findById(req.userId)
@@ -103,7 +129,8 @@ export const generateQuestion = async (req, res) => {
     }
 
     if (user.credits < 50) {
-      return res.status(400).json({
+      return res.status(402).json({
+        error: "INSUFFICIENT_CREDITS",
         message: "Not enough credits. Minimum 50 required."
       });
     }
@@ -129,6 +156,7 @@ export const generateQuestion = async (req, res) => {
 
     if (!userPrompt.trim()) {
       return res.status(400).json({
+        error: "VALIDATION_ERROR",
         message: "Prompt content is empty."
       });
     }
@@ -177,6 +205,7 @@ Make questions based on the candidate’s role, experience,interviewMode, projec
     if (!aiResponse || !aiResponse.trim()) {
            
       return res.status(500).json({
+        error: "AI_EMPTY_RESPONSE",
         message: "AI returned empty response."
       });
 
@@ -191,6 +220,7 @@ Make questions based on the candidate’s role, experience,interviewMode, projec
     if (questionsArray.length === 0) {
       
       return res.status(500).json({
+        error: "AI_QUESTION_GENERATION_FAILED",
         message: "AI failed to generate questions."
       });
     }
@@ -218,7 +248,16 @@ Make questions based on the candidate’s role, experience,interviewMode, projec
       questions: interview.questions
     });
   } catch (error) {
-    return res.status(500).json({message:`failed to create interview ${error}`})
+    console.error("[generate-question-error]", {
+      userId: req.userId || null,
+      message: error.message,
+      stack: error.stack
+    });
+
+    return res.status(500).json({
+      error: "GENERATE_QUESTIONS_FAILED",
+      message: error.message || "Failed to create interview."
+    })
   }
 }
 

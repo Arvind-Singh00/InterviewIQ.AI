@@ -11,7 +11,9 @@ import InterviewHistory from './pages/InterviewHistory'
 import Pricing from './pages/Pricing'
 import InterviewReport from './pages/InterviewReport'
 
-export const ServerUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000"
+axios.defaults.withCredentials = true
+
+export const ServerUrl = (import.meta.env.VITE_SERVER_URL || "http://localhost:8000").replace(/\/$/, "")
 
 function App() {
 
@@ -22,7 +24,9 @@ function App() {
         const result = await axios.get(ServerUrl + "/api/user/current-user", {withCredentials:true})
         dispatch(setUserData(result.data))
       } catch (error) {
-        console.log(error)
+        if (error.response?.status !== 401) {
+          console.log(error)
+        }
         dispatch(setUserData(null))
       }
     }

@@ -25,6 +25,7 @@ function Step1SetUp({ onStart }) {
     const [resumeText, setResumeText] = useState("");
     const [analysisDone, setAnalysisDone] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
 
     const handleUploadResume = async () => {
@@ -55,6 +56,7 @@ function Step1SetUp({ onStart }) {
     }
 
     const handleStart = async () => {
+        setErrorMessage("")
         setLoading(true)
         try {
            const result = await axios.post(ServerUrl + "/api/interview/generate-questions" , {role, experience, mode , resumeText, projects, skills } , {withCredentials:true}) 
@@ -67,6 +69,10 @@ function Step1SetUp({ onStart }) {
 
         } catch (error) {
             console.log(error)
+            const fieldErrors = error.response?.data?.fields
+                ? Object.values(error.response.data.fields).join(" ")
+                : "";
+            setErrorMessage(fieldErrors || error.response?.data?.message || "Unable to start the interview. Please try again.")
             setLoading(false)
         }
     }
@@ -255,10 +261,15 @@ function Step1SetUp({ onStart }) {
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.95 }}
                             className='w-full disabled:bg-gray-600 bg-green-600 hover:bg-green-700 text-white py-3 rounded-full text-lg font-semibold transition duration-300 shadow-md'>
-                            {loading ? "Staring...":"Start Interview"}
+                            {loading ? "Starting...":"Start Interview"}
 
 
                         </motion.button>
+                        {errorMessage && (
+                            <p className='text-sm text-red-600 text-center font-medium'>
+                                {errorMessage}
+                            </p>
+                        )}
                     </div>
 
                 </motion.div>
